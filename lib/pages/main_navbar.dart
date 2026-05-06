@@ -24,7 +24,6 @@ class _MainNavPageState extends State<MainNavPage> {
       body: _pages[_currentIndex],
       bottomNavigationBar: BlocBuilder<ProfileBloc, ProfileState>(
         builder: (context, state) {
-          // current profile எடுக்குது
           final profile = context.read<ProfileBloc>().currentProfile;
 
           return BottomNavigationBar(
@@ -48,7 +47,13 @@ class _MainNavPageState extends State<MainNavPage> {
               BottomNavigationBarItem(
                 icon: CircleAvatar(
                   radius: 14,
-                  backgroundImage: NetworkImage(profile.image),
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage: profile.image.isNotEmpty
+                      ? NetworkImage(profile.image)
+                      : null,
+                  child: profile.image.isEmpty
+                      ? const Icon(Icons.person, size: 14)
+                      : null,
                 ),
                 label: 'Profile',
               ),

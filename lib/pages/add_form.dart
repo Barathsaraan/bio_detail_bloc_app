@@ -51,6 +51,7 @@ class _AddDetailPageState extends State<AddDetailPage> {
   }
 
   // Date picker
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,

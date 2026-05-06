@@ -1,42 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../bloc/profile_bloc.dart';
+import '../bloc/profile_event.dart';
+import '../bloc/profile_state.dart';
 import '../bloc/user_bloc.dart';
 import '../bloc/user_event.dart';
 import 'user_list_page.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  @override
+  void initState() {
+    super.initState();
+    final currentState = context.read<ProfileBloc>().state;
+    debugPrint('HomePage initState — current state: $currentState');
+
+    if (currentState is! ProfileLoadedState &&
+        currentState is! ProfileUpdatedState) {
+      debugPrint('HomePage initState — fetching...');
+      context.read<ProfileBloc>().add(FetchProfileEvent());
+    } else {
+      debugPrint('no api call');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.indigo,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => BlocProvider(
-                  create: (_) => UserBloc()..add(FetchUsersEvent()),
-                  child: const UserListPage(),
+      appBar: AppBar(title: const Text('Home'), centerTitle: true),
+      body: BlocBuilder<ProfileBloc, ProfileState>(
+        builder: (context, state) {
+          // Loading or Init
+          if (state is ProfileInitState || state is ProfileLoadingState) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final profile = context.read<ProfileBloc>().currentProfile;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Card(
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 35,
+                          backgroundColor: Colors.grey.shade200,
+                          backgroundImage: profile.image.isNotEmpty
+                              ? NetworkImage(profile.image)
+                              : null,
+                          child: profile.image.isEmpty
+                              ? const Icon(Icons.person, size: 35)
+                              : null,
+                        ),
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Hi, ${profile.name}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              profile.email,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            );
-          },
-          child: const Text(
-            'Click Here',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-        ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider(
+                            create: (_) => UserBloc()..add(FetchUsersEvent()),
+                            child: const UserListPage(),
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'Click Here',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

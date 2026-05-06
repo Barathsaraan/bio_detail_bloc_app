@@ -8,7 +8,16 @@ class ProfileModel {
     required this.image,
     required this.email,
   });
- // using for changing the one field in the model
+
+  factory ProfileModel.fromJson(Map<String, dynamic> json) {
+    return ProfileModel(
+      name: json['name'] ?? '',
+      image: json['image'] ?? '',
+      email: json['email'] ?? '',
+    );
+  }
+
+  // using for changing the one field in the model
   ProfileModel copyWith({
     String? name,
     String? image,
